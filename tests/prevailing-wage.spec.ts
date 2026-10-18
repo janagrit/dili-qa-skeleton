@@ -44,6 +44,16 @@ for (const scenario of scenariosFor('prevailing-wage')) {
         );
         break;
       }
+      case 'PW-005': {
+        expect(() => checkPrevailingWage(record({ hourlyRate: 44.995 }), RATES)).toThrow(
+          /fractions of a cent/,
+        );
+        // A cent-level underpayment still yields a positive shortfall, never $0.
+        const result = checkPrevailingWage(record({ hourlyRate: 44.99 }), RATES);
+        expect(result.compliant).toBe(false);
+        expect(result.shortfallPerHour).toBe(0.01);
+        break;
+      }
       default:
         throw new Error(`No test body for scenario ${scenario.id} yet: add it here`);
     }

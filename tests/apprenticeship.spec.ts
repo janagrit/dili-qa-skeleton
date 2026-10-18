@@ -19,6 +19,16 @@ for (const scenario of scenariosFor('apprenticeship')) {
         expect(result.actualRatio).toBeLessThan(REQUIRED_RATIO);
         break;
       }
+      case 'AP-003': {
+        const result = checkApprenticeshipRatio(0.3, 3, 0.1);
+        expect(result.compliant).toBe(true);
+        break;
+      }
+      case 'AP-004': {
+        expect(() => checkApprenticeshipRatio(150, 100, REQUIRED_RATIO)).toThrow(/exceed totalHours/);
+        expect(() => checkApprenticeshipRatio(-5, 100, REQUIRED_RATIO)).toThrow(/non-negative/);
+        break;
+      }
       default:
         throw new Error(`No test body for scenario ${scenario.id} yet: add it here`);
     }
