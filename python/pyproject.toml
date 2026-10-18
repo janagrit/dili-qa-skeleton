@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dili-compliance"
+version = "0.1.0"
+description = "Illustrative PWA compliance engine + test suite (Python port)"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=7.4", "hypothesis>=6.80", "requests>=2.31"]
+
+[tool.setuptools.packages.find]
+include = ["dili_compliance*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "--strict-markers -ra"
+markers = [
+    "unit: fast, deterministic engine/registry tests",
+    "property: property-based (Hypothesis) tests",
+    "combinatorial: combinatorial coverage tests",
+    "api: hits the live login API; opt in with DILI_RUN_API_TESTS=1",
+]

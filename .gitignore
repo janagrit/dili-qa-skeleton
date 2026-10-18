@@ -4,3 +4,11 @@ test-results/
 playwright-report/
 playwright/.cache/
 .env
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.hypothesis/
+*.egg-info/
