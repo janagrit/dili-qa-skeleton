@@ -15,8 +15,12 @@ The test suite is an **executable specification of the compliance engine**:
 - `tests/` — one test per scenario, generated from the registry, plus
   `registry.spec.ts`: meta-tests proving every scenario has a citation
   (audit traceability).
-- `.github/workflows/ci.yml` — CI-gated releases: typecheck + tests on
-  every push and PR.
+- `.github/workflows/ci.yml` — CI-gated releases: typecheck + logic tests
+  (TypeScript) and the Python suite on every push and PR. The live-site UI
+  tests (`login.spec.ts`) are never run in CI.
+- `python/` — the Python reference implementation and fuller suite
+  (fringe benefits, input validation, effective dates, property-based,
+  combinatorial and opt-in API tests). See `python/README.md`.
 
 This mirrors the 90-day plan from the posting: scenario registry with
 citations, CI-gated releases, every defect becomes a permanent regression
@@ -26,9 +30,12 @@ test.
 
 ```bash
 npm install
+npm test            # engine + registry tests (no browser, no network) — what CI runs
+npm run typecheck   # tsc --noEmit
+
+# UI tests drive the live site; run them deliberately:
 npx playwright install chromium
-npm test          # run the suite
-npm run typecheck # tsc --noEmit
+npm run test:ui
 ```
 
 ## Extend it (good next steps for tomorrow)
