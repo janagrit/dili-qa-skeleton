@@ -45,7 +45,7 @@ def test_invalid_login_returns_consistent_error(payload):
 @pytest.mark.xfail(
     reason="AUDIT finding #1: empty-string credentials returned 200 + a token; "
     "this asserts the intended behaviour and should fail until the backend is fixed",
-    strict=False,
+    strict=True,  # an unexpected pass (backend fixed) fails the run, so we notice
 )
 def test_empty_string_credentials_are_rejected():
     r = requests.post(API_URL, json={"username": "", "password": ""}, timeout=15)

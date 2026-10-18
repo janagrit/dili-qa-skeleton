@@ -5,18 +5,21 @@ from .engine import (
     PayrollRecord,
     PrevailingRate,
     WageCheckResult,
+    applicable_percentage,
     check_apprenticeship_ratio,
     check_prevailing_wage,
 )
-from .registry import SCENARIO_REGISTRY, Scenario, scenarios_for
+from .registry import CITATIONS, SCENARIO_REGISTRY, Scenario, scenarios_for
 
 __all__ = [
     "ApprenticeshipCheckResult",
     "PayrollRecord",
     "PrevailingRate",
     "WageCheckResult",
+    "applicable_percentage",
     "check_apprenticeship_ratio",
     "check_prevailing_wage",
+    "CITATIONS",
     "SCENARIO_REGISTRY",
     "Scenario",
     "scenarios_for",

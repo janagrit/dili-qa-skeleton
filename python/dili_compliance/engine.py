@@ -11,21 +11,61 @@ audit and adds the Davis-Bacon fringe component:
   the compared value and the displayed value never disagree.
 * The wage check scores total compensation (base + fringe), not base alone,
   which is what Davis-Bacon actually requires.
+* Invalid input is rejected with ``ValueError`` instead of producing a verdict:
+  sub-cent money (no silent rounding), negative amounts or hours, NaN/inf,
+  apprentice hours above total hours, and ratios above 100%.
+* The apprenticeship percentage depends on the construction start date
+  (``applicable_percentage``).
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from datetime import date
 from fractions import Fraction
 from typing import Mapping, Union
 
 Number = Union[int, float, str, Decimal]
 
 
-def _money(value: Number) -> Decimal:
-    """Coerce a value to a 2dp Decimal (cents). Strings avoid float artefacts."""
-    return Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+CENT = Decimal("0.01")
+
+
+def _decimal(value: Number, field: str) -> Decimal:
+    """Parse a finite, non-negative Decimal. Strings avoid float artefacts."""
+    try:
+        d = Decimal(str(value))
+    except InvalidOperation as exc:
+        raise ValueError(f"{field} is not a number: {value!r}") from exc
+    if not d.is_finite():
+        raise ValueError(f"{field} must be finite, got {value!r}")
+    if d < 0:
+        raise ValueError(f"{field} must not be negative, got {value!r}")
+    return d
+
+
+def _fraction(value: Union[Number, Fraction], field: str) -> Fraction:
+    """Parse an exact, non-negative rational (accepts "0.15", "3/20", Fraction)."""
+    try:
+        f = Fraction(str(value))
+    except (ValueError, ZeroDivisionError) as exc:
+        raise ValueError(f"{field} is not a finite number: {value!r}") from exc
+    if f < 0:
+        raise ValueError(f"{field} must not be negative, got {value!r}")
+    return f
+
+
+def _money(value: Number, field: str = "amount") -> Decimal:
+    """Parse a money amount in whole cents.
+
+    Sub-cent amounts are rejected rather than rounded: rounding 44.995 up to
+    45.00 before comparing would silently turn an underpayment into a pass.
+    """
+    d = _decimal(value, field)
+    if d != d.quantize(CENT):
+        raise ValueError(f"{field} has fractions of a cent: {value!r}")
+    return d.quantize(CENT)
 
 
 @dataclass(frozen=True)
@@ -41,7 +81,7 @@ class PrevailingRate:
 
     @classmethod
     def of(cls, base: Number, fringe: Number = 0) -> "PrevailingRate":
-        return cls(base=_money(base), fringe=_money(fringe))
+        return cls(base=_money(base, "base"), fringe=_money(fringe, "fringe"))
 
 
 @dataclass(frozen=True)
@@ -64,9 +104,9 @@ class PayrollRecord:
         return cls(
             worker_id=worker_id,
             classification=classification,
-            base_rate=_money(base_rate),
-            fringe_rate=_money(fringe_rate),
-            hours_worked=_money(hours_worked),
+            base_rate=_money(base_rate, "base_rate"),
+            fringe_rate=_money(fringe_rate, "fringe_rate"),
+            hours_worked=_decimal(hours_worked, "hours_worked"),
         )
 
 
@@ -133,15 +173,22 @@ def check_apprenticeship_ratio(
     Uses exact ``Fraction`` arithmetic so a value exactly at the threshold is
     compliant and the verdict never contradicts the displayed ratio.
 
-    Reference: 26 U.S.C. 45(b)(8)(B) (apprenticeship labor-hours ratio);
-    see also IRS Notice 2022-61.
+    Reference: 26 U.S.C. 45(b)(8)(A) (labor-hours requirement / applicable
+    percentage). 45(b)(8)(B) is the separate apprentice-to-journeyworker ratio.
     """
-    total = Fraction(str(total_hours))
-    if total <= 0:
+    apprentice = _fraction(apprentice_hours, "apprentice_hours")
+    total = _fraction(total_hours, "total_hours")
+    required = _fraction(required_ratio, "required_ratio")
+    if total == 0:
         raise ValueError("total_hours must be positive")
+    if apprentice > total:
+        raise ValueError(
+            f"apprentice_hours ({apprentice_hours}) exceed total_hours ({total_hours})"
+        )
+    if required > 1:
+        raise ValueError(f"required_ratio must be between 0 and 1, got {required_ratio}")
 
-    actual = Fraction(str(apprentice_hours)) / total
-    required = Fraction(str(required_ratio))
+    actual = apprentice / total
     displayed = Decimal(actual.numerator) / Decimal(actual.denominator)
 
     return ApprenticeshipCheckResult(
@@ -150,3 +197,16 @@ def check_apprenticeship_ratio(
         required_ratio=required,
         displayed_ratio=displayed.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
     )
+
+
+def applicable_percentage(construction_start: date) -> Fraction:
+    """Apprentice labor-hours percentage by construction start date.
+
+    26 U.S.C. 45(b)(8)(A)(ii): 10% if construction begins before 2023, 12.5% if
+    it begins during 2023, 15% if it begins after 2023.
+    """
+    if construction_start < date(2023, 1, 1):
+        return Fraction(10, 100)
+    if construction_start <= date(2023, 12, 31):
+        return Fraction(125, 1000)
+    return Fraction(15, 100)

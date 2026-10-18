@@ -15,13 +15,22 @@ the JD lists.
 | `tests/test_scenarios.py` | One test per registry scenario (unit) |
 | `tests/test_property_based.py` | **Property-based** (Hypothesis) invariants across the whole input range |
 | `tests/test_combinatorial.py` | **Combinatorial** cross-product of base/fringe pay positions |
+| `tests/test_validation_and_dates.py` | Invalid-input rejection (sub-cent, negative, NaN, apprentice > total) and effective-date boundaries |
 | `tests/test_api_login.py` | **API** tests for the login endpoint (opt-in; off by default) |
+| `dili_compliance/runner.py` | Runs a registry scenario and captures the verdict or the expected error |
 
 ## Audit items addressed
 
 - **Python, not just TypeScript** — full parallel engine + suite.
-- **Paragraph-level citations** — e.g. `29 CFR 5.5(a)(1)(i)`, `26 U.S.C. 45(b)(8)(B)`
-  (re-verify against eCFR; the 2023 DBA rule renumbered parts of 5.5).
+- **Paragraph-level, reviewed citations** — `29 CFR 5.5(a)(1)(i)` (wages + fringe),
+  `29 CFR 5.5(a)(1)(iii)` (conformance), `26 U.S.C. 45(b)(8)(A)` (apprentice labor
+  hours). Every citation must be on the `CITATIONS` list in the registry, so a
+  well-formed but wrong paragraph fails the meta-tests.
+- **Input validation** — sub-cent money is rejected, not rounded ($44.995 no longer
+  passes as $45.00); negative / NaN values and apprentice hours above total are
+  rejected (PW-006, PW-007, AP-004, AP-005).
+- **Effective dates** — `applicable_percentage()` returns 10% / 12.5% / 15% by
+  construction start date (26 U.S.C. 45(b)(8)(A)(ii)), tested at each boundary.
 - **Fringe benefits** — the wage check scores base + fringe, with base-rate and
   total-compensation rules.
 - **Property-based / combinatorial / API testing** — all three present; the
@@ -41,10 +50,12 @@ DILI_RUN_API_TESTS=1 pytest -m api   # opt in to live API tests (hits production
 ```
 
 API tests are skipped unless `DILI_RUN_API_TESTS=1` so CI never hits production.
-`test_empty_string_credentials_are_rejected` is an `xfail` tracking audit
-finding #1 (empty-string login returned a token) — it documents the intended
-behaviour without failing the build, and will flip to a real pass once the
-backend rejects empty credentials.
+`test_empty_string_credentials_are_rejected` is a strict `xfail` tracking audit
+finding #1. It documents the intended behaviour without failing the build, and
+fails loudly (XPASS) once the backend is fixed so the marker gets removed.
+
+CI saves `test-results/junit.xml` as a build artifact: each test name carries the
+scenario id, so it is the per-release record of what was tested.
 
 > Rates, thresholds, and engine logic are illustrative, not legal advice and not
 > Dili's real implementation.

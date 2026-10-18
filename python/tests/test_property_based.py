@@ -49,8 +49,15 @@ def test_wage_verdict_and_shortfall_are_consistent(req_base, req_fringe, paid_ba
     assert result.compliant == (meets_base and meets_total)
 
 
-@given(apprentice=hours, total=hours, req_num=st.integers(1, 99))
-def test_ratio_verdict_matches_exact_comparison(apprentice, total, req_num):
+@st.composite
+def apprentice_and_total(draw):
+    total = draw(hours)
+    return draw(st.integers(min_value=0, max_value=total)), total
+
+
+@given(pair=apprentice_and_total(), req_num=st.integers(1, 99))
+def test_ratio_verdict_matches_exact_comparison(pair, req_num):
+    apprentice, total = pair
     required = Fraction(req_num, 100)
     result = check_apprenticeship_ratio(apprentice, total, str(required))
     exact = Fraction(apprentice, total)
