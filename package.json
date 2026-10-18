@@ -1,0 +1,1 @@
+{"description":"Interview-prep skeleton: executable compliance scenario registry (Playwright + TypeScript)","devDependencies":{"@playwright/test":"latest","@types/node":"^20.19.43","typescript":"^5.0.0"},"name":"dili-qa-skeleton","private":true,"scripts":{"test":"playwright test","test:headed":"playwright test --headed","typecheck":"tsc --noEmit"},"version":"0.1.0"}
