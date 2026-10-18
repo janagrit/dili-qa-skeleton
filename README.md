@@ -38,6 +38,29 @@ npx playwright install chromium
 npm run test:ui
 ```
 
+## What "green" means
+
+| Suite | Tests | What it checks | Touches dili.com? |
+|---|---|---|---|
+| `npm test` (CI) | 12 | Illustrative compliance engine + scenario registry (TypeScript) | No |
+| `cd python && pytest` (CI) | 57 (+4 opt-in API) | Python engine: scenarios, citations, validation, effective dates, property-based, combinatorial | No (API tests opt-in) |
+| `npm run test:ui` | 19 | Live site: login flow, page health, known production bugs | **Yes** |
+
+A green CI run means the **compliance logic and registry** are correct. It says
+nothing about the live website: those tests are deliberately kept out of CI.
+
+Known production bugs are written as `test.fail(...)` in `tests/site.spec.ts`
+and `tests/login.spec.ts`. Each asserts the correct behaviour and is *expected*
+to fail, so the run stays green while the report lists the bug; when Dili fixes
+it, the test fails ("expected to fail, but passed") and the marker is removed.
+
+| Bug | Test |
+|---|---|
+| BUG-1 `/api/jobs` returns 502 "Dover API error"; careers page lists no jobs | `site.spec.ts` |
+| BUG-2 `/landing/` serves raw XML instead of HTML | `site.spec.ts` |
+| BUG-3 `/`, `/privacy/`, `/landing/ira-landing/` are wider than a 390px phone | `site.spec.ts` |
+| BUG-4 Empty login form gives no validation message | `login.spec.ts` |
+
 ## Extend it (good next steps for tomorrow)
 
 1. Add a scenario to `scenarioRegistry.ts` (e.g. overtime, certified payroll)
