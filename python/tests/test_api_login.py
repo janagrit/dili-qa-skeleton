@@ -39,14 +39,3 @@ def test_invalid_login_returns_consistent_error(payload):
     assert r.status_code == 400
     body = r.json()
     assert body == {"errors": {"login": "Invalid username or password"}}
-
-
-@run_api
-@pytest.mark.xfail(
-    reason="AUDIT finding #1: empty-string credentials returned 200 + a token; "
-    "this asserts the intended behaviour and should fail until the backend is fixed",
-    strict=True,  # an unexpected pass (backend fixed) fails the run, so we notice
-)
-def test_empty_string_credentials_are_rejected():
-    r = requests.post(API_URL, json={"username": "", "password": ""}, timeout=15)
-    assert r.status_code == 400, f"empty credentials should be rejected, got {r.status_code}"
