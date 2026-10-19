@@ -60,6 +60,8 @@ it, the test fails ("expected to fail, but passed") and the marker is removed.
 | BUG-3 `/`, `/privacy/`, `/landing/ira-landing/` are wider than a 390px phone | `site.spec.ts` |
 | BUG-4 Empty login form gives no validation message | `login.spec.ts` |
 
+Full write-up with expected behaviour for each: [`AUDIT.md`](AUDIT.md).
+
 ### Example `npm run test:ui` output
 
 Every Playwright run ends with a summary table (custom reporter in

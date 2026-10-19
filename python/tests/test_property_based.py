@@ -1,8 +1,7 @@
 """Property-based tests (Hypothesis).
 
-These assert invariants across the whole input range, which is what catches the
-two floating-point verdict bugs the audit found — bugs the example-based tests
-missed because they only used clean inputs.
+These assert invariants across the whole input range, which catches
+floating-point verdict errors that example-based tests with clean inputs miss.
 """
 
 from __future__ import annotations

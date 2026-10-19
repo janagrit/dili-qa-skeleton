@@ -32,7 +32,7 @@ def test_scenario_ids_are_unique():
 
 
 def test_citations_are_paragraph_level():
-    """Audit requirement: no bare 'Part 5' — citations must be paragraph-level."""
+    """Traceability: no bare 'Part 5' — citations must be paragraph-level."""
     for s in SCENARIO_REGISTRY:
         assert "Part 5" not in s.citation, f"{s.id} citation too broad: {s.citation}"
         assert CITATION_RE.search(s.citation), f"{s.id} citation not specific: {s.citation}"
