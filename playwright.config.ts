@@ -10,7 +10,10 @@ try {
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
-  reporter: 'list',
+  reporter: [
+    ['list'],
+    ['./reporters/table-summary-reporter.js'],
+  ],
   use: {
     // `||` (not `??`) so an empty BASE_URL= in .env still falls back.
     baseURL: process.env.BASE_URL || 'https://www.dili.com',
