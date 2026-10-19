@@ -22,7 +22,7 @@ below says whether it was *verified* here or still *needs confirmation*.
 
 | # | Finding | Severity | Status |
 |---|---------|----------|--------|
-| 1 | Login API security issue | Critical (security) | Open — reported privately; details withheld |
+| 1 | Login API security issue | Critical (security) | Open — shared with Dili; details withheld |
 | 2 | Apprenticeship ratio: float error flags an exactly-at-threshold worker non-compliant | High (wrong verdict) | **Fixed** — regression test AP-003 |
 | 3 | Wage check reports a worker non-compliant with a `$0.00` shortfall | High (wrong verdict) | **Fixed** — integer-cent math |
 | 4 | CI triggers on `main`, but the only branch is `master` — CI never runs | High (process) | **Fixed** |
@@ -41,7 +41,7 @@ A possible authentication weakness in the login API was found during the live
 check. **It is a security issue, not a normal QA bug**, so the details are not
 published in this public repository.
 
-- Reported privately to Dili for confirmation against the backend.
+- Shared with Dili for confirmation against the backend.
 - No token or session was used or probed further.
 - A regression test will be added once the intended behaviour is confirmed.
 
@@ -188,7 +188,7 @@ The one `waitForTimeout` in `login.spec.ts` remains.
 
 ## Still open
 
-1. **Finding 1** — awaiting confirmation from Dili (reported privately).
+1. **Finding 1** — awaiting confirmation from Dili.
 2. **Finding 6** — empty-login feedback; product fix needed. Tracked by `test.fail`.
 3. **Finding 9** — replace the remaining `waitForTimeout` with a condition wait.
 4. Move the TypeScript scenario inputs into the registry, as the Python suite does.
