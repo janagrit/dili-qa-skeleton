@@ -17,7 +17,7 @@ The test suite is an **executable specification of the compliance engine**:
   (audit traceability).
 - `.github/workflows/ci.yml` — CI-gated releases: typecheck + logic tests
   (TypeScript) and the Python suite on every push and PR. The live-site UI
-  tests (`login.spec.ts`) are never run in CI.
+  tests (`login.spec.ts`, `site.spec.ts`) are never run in CI.
 - `python/` — the Python reference implementation and fuller suite
   (fringe benefits, input validation, effective dates, property-based,
   combinatorial and opt-in API tests). See `python/README.md`.
@@ -42,7 +42,7 @@ npm run test:ui
 | Suite | Tests | What it checks | Touches dili.com? |
 |---|---|---|---|
 | `npm test` (CI) | 12 | Illustrative compliance engine + scenario registry (TypeScript) | No |
-| `cd python && pytest` (CI) | 57 (+4 opt-in API) | Python engine: scenarios, citations, validation, effective dates, property-based, combinatorial | No (API tests opt-in) |
+| `cd python && pytest` (CI) | 57 (+3 opt-in API) | Python engine: scenarios, citations, validation, effective dates, property-based, combinatorial | No (API tests opt-in) |
 | `npm run test:ui` | 19 | Live site: login flow, page health, known production bugs | **Yes** |
 
 A green CI run means the **compliance logic and registry** are correct. It says

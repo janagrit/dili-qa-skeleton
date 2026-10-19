@@ -50,12 +50,9 @@ DILI_RUN_API_TESTS=1 pytest -m api   # opt in to live API tests (hits production
 ```
 
 API tests are skipped unless `DILI_RUN_API_TESTS=1` so CI never hits production.
-`test_empty_string_credentials_are_rejected` is a strict `xfail` tracking audit
-finding #1. It documents the intended behaviour without failing the build, and
-fails loudly (XPASS) once the backend is fixed so the marker gets removed.
-
-CI saves `test-results/junit.xml` as a build artifact: each test name carries the
-scenario id, so it is the per-release record of what was tested.
+Each run ends with a compliance scenario table (scenario, citation, expected
+result, PASS/FAIL), printed by `tests/conftest.py`, so every run leaves a
+readable record of what was tested.
 
 > Rates, thresholds, and engine logic are illustrative, not legal advice and not
 > Dili's real implementation.
