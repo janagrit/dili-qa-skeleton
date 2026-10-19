@@ -1,8 +1,7 @@
 """Illustrative prevailing-wage / apprenticeship compliance engine (Python port).
 
 This is NOT Dili's real logic and NOT legal advice. It mirrors the TypeScript
-stub in ``src/complianceEngine.ts`` but fixes the two verdict bugs found in the
-audit and adds the Davis-Bacon fringe component:
+stub in ``src/complianceEngine.ts`` and adds the Davis-Bacon fringe component:
 
 * Money is handled in integer cents (via ``Decimal``) so a worker is never
   flagged non-compliant with a ``$0.00`` shortfall.

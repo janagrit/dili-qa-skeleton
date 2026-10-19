@@ -1,7 +1,7 @@
 """API tests for the login endpoint.
 
 These hit the live API, so they are opt-in: they run only when
-``DILI_RUN_API_TESTS=1`` (keeps CI off production, per the audit). Run with:
+``DILI_RUN_API_TESTS=1`` (keeps CI off production). Run with:
 
     DILI_RUN_API_TESTS=1 pytest -m api
 """

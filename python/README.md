@@ -1,8 +1,7 @@
 # Python compliance suite
 
 A Python reference implementation of the compliance engine and scenario
-registry, addressing the audit (`../AUDIT.md`). It fixes the two verdict bugs
-from the TypeScript version and adds broader testing techniques (property-based,
+registry. It uses exact money and ratio math and adds broader testing techniques (property-based,
 combinatorial, and opt-in API tests).
 
 ## What's here
@@ -19,9 +18,8 @@ combinatorial, and opt-in API tests).
 | `tests/test_api_login.py` | **API** tests for the login endpoint (opt-in; off by default) |
 | `dili_compliance/runner.py` | Runs a registry scenario and captures the verdict or the expected error |
 
-## Audit items addressed
+## Highlights
 
-- **Python, not just TypeScript** — full parallel engine + suite.
 - **Paragraph-level, reviewed citations** — `29 CFR 5.5(a)(1)(i)` (wages + fringe),
   `29 CFR 5.5(a)(1)(iii)` (conformance), `26 U.S.C. 45(b)(8)(A)` (apprentice labor
   hours). Every citation must be on the `CITATIONS` list in the registry, so a
@@ -34,8 +32,8 @@ combinatorial, and opt-in API tests).
 - **Fringe benefits** — the wage check scores base + fringe, with base-rate and
   total-compensation rules.
 - **Property-based / combinatorial / API testing** — all three present; the
-  property tests are what catch the float bugs the example-based tests missed.
-- **Verdict bugs fixed** — no non-compliant-with-$0.00-shortfall; exactly-at-
+  property tests check verdicts across the whole input range, not just clean values.
+- **Exact math** — no non-compliant-with-$0.00-shortfall; exactly-at-
   threshold ratios (0.3/3 == 10%) are compliant.
 
 ## Run it
