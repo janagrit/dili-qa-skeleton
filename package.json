@@ -1,5 +1,5 @@
 {
-  "description": "Interview-prep skeleton: executable compliance scenario registry (Playwright + TypeScript)",
+  "description": "Executable compliance scenario registry for prevailing-wage and apprenticeship checks (Playwright + TypeScript)",
   "devDependencies": {
     "@playwright/test": "1.64.1",
     "@types/node": "^20.19.43",

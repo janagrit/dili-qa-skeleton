@@ -1,9 +1,9 @@
 # Python compliance suite
 
-A Python port of the compliance engine and scenario registry, added to address
-the audit (`../AUDIT.md`) and the job description's Python requirement. It fixes
-the two verdict bugs from the TypeScript version and adds the testing techniques
-the JD lists.
+A Python reference implementation of the compliance engine and scenario
+registry, addressing the audit (`../AUDIT.md`). It fixes the two verdict bugs
+from the TypeScript version and adds broader testing techniques (property-based,
+combinatorial, and opt-in API tests).
 
 ## What's here
 

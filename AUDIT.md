@@ -1,4 +1,4 @@
-# QA Skeleton — Audit
+# Dili Compliance QA — Audit
 
 **Date:** 2026-10-18
 **Scope:** `dili-qa-skeleton` (TypeScript + Playwright). Static review of the
@@ -26,7 +26,7 @@ below says whether it was *verified* here or still *needs confirmation*.
 | 5 | `.env.example` points at `https://www.houserx.com` | Medium | Verified |
 | 6 | Empty login form submit gives no feedback (no validation) | Medium (UX) | Verified live; covered by `test.fail` |
 | 7 | Tests run against the live production site by default | Medium (process) | Verified |
-| 8 | Scenario coverage / citation gaps vs. the job description | Medium (structural) | Verified |
+| 8 | Scenario coverage & citation gaps | Medium (structural) | Verified |
 | 9 | Housekeeping: stray `.gitignore copy`, unpinned `@playwright/test: latest`, fixed `waitForTimeout` | Low | Verified |
 
 ---
@@ -128,7 +128,7 @@ against it. CI would hit production on every run.
 **Fix:** point tests at a staging/preview environment, or mock the auth API, and
 gate any live-site tests behind an explicit flag.
 
-### 8. Coverage & citation gaps vs. the job description
+### 8. Coverage & citation gaps
 - **Citations too broad.** Most prevailing-wage scenarios cite
   `29 CFR Part 5` rather than a specific paragraph (e.g. `29 CFR 5.5(a)(1)(i)`).
   A reviewer can't trace a verdict to the exact rule.
@@ -146,8 +146,8 @@ gate any live-site tests behind an explicit flag.
   only checks that fields are non-empty — not citation format, nor that every
   scenario has a matching test body.
 - **Testing techniques absent.** No property-based, combinatorial, API,
-  integration, or regression tests — all named in the job description. The two
-  verdict bugs above (2, 3) are exactly what property-based testing would catch.
+  integration, or regression tests. The two verdict bugs above (2, 3) are
+  exactly what property-based testing would catch.
 
 ---
 
@@ -171,7 +171,3 @@ gate any live-site tests behind an explicit flag.
 5. **Finding 8** — move scenario data into the registry, tighten citations and
    the meta-tests, add the missing test types.
 6. **Finding 9** — housekeeping.
-
-*Note on the JD:* the role asks for strong Python; this skeleton is entirely
-TypeScript. A parallel Python registry + suite would be a stronger portfolio
-fit, but that is a direction decision, not a defect.

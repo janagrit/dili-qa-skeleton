@@ -1,142 +1,85 @@
+// Playwright reporter: prints a single result table at the end of every run.
+// Wired in via playwright.config.ts (`reporter`). Distinguishes genuine
+// failures from expected `test.fail` known-bug tests so the summary is honest.
 
 const Table = require("cli-table3")
-const env = process.env
-
-let chalk
-
-;(async () => {
-  const chalkModule = await import("chalk")
-  chalk = new chalkModule.Chalk({ level: 3 })
-})()
-
 
 class TableSummaryReporter {
   constructor() {
-    this.testResults = {}
-    this.finalResults = new Map()
-    this.summary = { passed: 0, failed: 0, skipped: 0 }
+    // Keyed by test id so retries collapse to the final attempt.
+    this.results = new Map()
   }
 
   onTestEnd(test, result) {
-    if (!chalk) {
-      // fallback if chalk not loaded yet
-      chalk = { green: s => s, red: s => s, yellow: s => s, cyan: s => s, magenta: s => s, blue: s => s, bold: s => s }
-    }
-
-    const section = test.parent?.title || "Unknown Suite"
-    if (!this.testResults[section]) this.testResults[section] = []
-
-    const status =
-      result.status === "passed"
-        ? chalk.green("Passed")
-        : result.status === "failed"
-        ? chalk.red("Failed")
-        : chalk.yellow("Skipped")
-
-    const duration = result.duration
-      ? this.formatDuration(result.duration)
-      : "N/A"
-    const testKey = `${section}::${test.title}`
-
-    if (result.status === "passed") {
-      this.finalResults.set(testKey, {
-        suite: section,
-        name: test.title,
-        status,
-        duration,
-      })
-      if (
-        !this.testResults[testKey] ||
-        this.testResults[testKey] !== "passed"
-      ) {
-        this.summary.passed++
-      }
-    } else if (!this.finalResults.has(testKey)) {
-      this.finalResults.set(testKey, {
-        suite: section,
-        name: test.title,
-        status,
-        duration,
-      })
-      if (result.status === "failed") this.summary.failed++
-      if (result.status === "skipped") this.summary.skipped++
-    }
-
-    this.testResults[section].push({ name: test.title, status, duration })
+    this.results.set(test.id, {
+      suite: test.parent?.title || "Unknown Suite",
+      name: test.title,
+      key: this._classify(test, result),
+      duration: this._formatDuration(result.duration),
+    })
   }
 
-  formatDuration(ms) {
-    const seconds = Math.floor(ms / 1000)
+  _classify(test, result) {
+    // outcome(): 'skipped' | 'expected' | 'unexpected' | 'flaky'
+    const outcome = typeof test.outcome === "function" ? test.outcome() : "expected"
+    if (result.status === "skipped" || outcome === "skipped") return "skipped"
+    // Expected failure = a `test.fail` known-bug test that failed as intended.
+    if (outcome === "expected" && result.status !== "passed") return "knownbug"
+    // Unexpected = genuine failure, incl. a `test.fail` test that now PASSES
+    // (bug fixed → remove the marker).
+    if (outcome === "unexpected" || result.status === "failed" || result.status === "timedOut") {
+      return "failed"
+    }
+    if (outcome === "flaky") return "flaky"
+    return "passed"
+  }
+
+  _formatDuration(ms) {
+    if (!ms) return "0s"
+    const seconds = Math.round(ms / 1000)
     const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return minutes > 0 ? `${minutes}m ${remainingSeconds}s` : `${seconds}s`
+    return minutes > 0 ? `${minutes}m ${seconds % 60}s` : `${seconds}s`
   }
 
-  onEnd() {
-    if (!chalk) {
-      // fallback if chalk not loaded yet
-      chalk = { green: s => s, red: s => s, yellow: s => s, cyan: s => s, magenta: s => s, blue: s => s, bold: s => s }
+  async onEnd() {
+    let chalk
+    try {
+      const mod = await import("chalk")
+      chalk = new mod.Chalk({ level: 3 })
+    } catch {
+      const identity = (s) => s
+      chalk = { green: identity, red: identity, yellow: identity, cyan: identity, magenta: identity, bold: identity }
     }
 
-    const environment = env.environment || env.ENVIRONMENT || env.NEXT_PUBLIC_ENV || 'unknown'
-    const misCode = env.PLAYWRIGHT_MisCode || env.misCode || env.NEXT_PUBLIC_MISCODE || 'n/a'
+    const labels = {
+      passed: chalk.green("Passed"),
+      failed: chalk.red("Failed"),
+      knownbug: chalk.cyan("Known bug"),
+      skipped: chalk.yellow("Skipped"),
+      flaky: chalk.magenta("Flaky"),
+    }
 
-
-    console.log(
-      chalk.bold(
-        `\nRunning Environment: ${chalk.cyan(environment.toUpperCase())}`
-      )
-    )
-    // console.log(chalk.bold(`MIS Code: ${chalk.magenta(misCode)}`))
-
-    console.log(chalk.bold("\nFinal Summary for All Sections:\n"))
-
-    if (!this.finalResults || this.finalResults.size === 0) {
-      console.log(chalk.yellow("No test results recorded."))
+    const rows = [...this.results.values()]
+    if (rows.length === 0) {
+      console.log(chalk.yellow("\nNo test results recorded."))
       return
     }
 
-    for (const section of Object.keys(this.testResults)) {
-      this.printSectionSummary(section)
-    }
-
-    console.log(
-      chalk.bold(
-        "\n ========================================================================================"
-      )
-    )
-
-
-    const tableFinal = new Table({
-      head: ["Test Suite", "Test Name", "Status", "Duration"],
-      colWidths: [30, 60, 8, 7],
-    })
-
-    ;[...this.finalResults.values()].forEach(res => {
-      tableFinal.push([res.suite, res.name, res.status, res.duration])
-    })
-
-    console.log(tableFinal.toString())
-
-    console.log(`\nTotal Tests: ${this.finalResults.size}`)
-    console.log(chalk.green(`Passed: ${this.summary.passed}`))
-    console.log(chalk.red(`Failed: ${this.summary.failed}`))
-    console.log(chalk.yellow(`Skipped: ${this.summary.skipped}`))
-  }
-
-  printSectionSummary(section) {
     const table = new Table({
-      head: ["Test Name", "Status", "Duration"],
-      colWidths: [70, 10, 10],
+      head: ["Test Suite", "Test Name", "Status", "Duration"],
+      colWidths: [26, 56, 11, 10],
+      wordWrap: true,
     })
+    for (const r of rows) table.push([r.suite, r.name, labels[r.key], r.duration])
+    console.log("\n" + table.toString())
 
-    const results = this.testResults[section]
-    results.forEach(res => {
-      table.push([res.name, res.status, res.duration])
-    })
-
-    console.log(chalk.blue.bold(`\n${section} Section Summary:`))
-    console.log(table.toString())
+    const count = (key) => rows.filter((r) => r.key === key).length
+    console.log(chalk.bold(`\nTotal: ${rows.length}`))
+    console.log(chalk.green(`Passed: ${count("passed")}`))
+    console.log(chalk.red(`Failed: ${count("failed")}`))
+    console.log(chalk.cyan(`Known bugs (expected fail): ${count("knownbug")}`))
+    if (count("flaky")) console.log(chalk.magenta(`Flaky: ${count("flaky")}`))
+    console.log(chalk.yellow(`Skipped: ${count("skipped")}`))
   }
 }
 

@@ -1,8 +1,8 @@
-# QA skeleton: executable compliance scenario registry
+# Dili compliance QA: executable scenario registry
 
-Interview-prep skeleton for a **Senior QA Engineer** role at a compliance-tech
-startup (think Dili-style: prevailing wage + apprenticeship compliance).
-Playwright + TypeScript. Small on purpose: open it, run it, extend it.
+A compliance-testing project for prevailing-wage and apprenticeship rules
+(Dili-style). Playwright + TypeScript, with a Python reference implementation.
+Small and self-contained: open it, run it, extend it.
 
 ## The idea
 
@@ -22,9 +22,8 @@ The test suite is an **executable specification of the compliance engine**:
   (fringe benefits, input validation, effective dates, property-based,
   combinatorial and opt-in API tests). See `python/README.md`.
 
-This mirrors the 90-day plan from the posting: scenario registry with
-citations, CI-gated releases, every defect becomes a permanent regression
-test.
+The approach: a scenario registry with citations, CI-gated releases, and every
+defect captured as a permanent regression test.
 
 ## Run it
 
@@ -61,7 +60,52 @@ it, the test fails ("expected to fail, but passed") and the marker is removed.
 | BUG-3 `/`, `/privacy/`, `/landing/ira-landing/` are wider than a 390px phone | `site.spec.ts` |
 | BUG-4 Empty login form gives no validation message | `login.spec.ts` |
 
-## Extend it (good next steps for tomorrow)
+### Example `npm run test:ui` output
+
+Every Playwright run ends with a summary table (custom reporter in
+`reporters/table-summary-reporter.js`). It marks the known-bug `test.fail` tests
+as **Known bug** — expected failures, kept separate from genuine `Failed` — so
+the run stays green (exit 0). The last `npm run test:ui` run:
+
+```
+┌───────────────────────┬────────────────────────────────────────────────────┬───────────┬──────────┐
+│ Test Suite            │ Test Name                                          │ Status    │ Duration │
+├───────────────────────┼────────────────────────────────────────────────────┼───────────┼──────────┤
+│ login                 │ home page "Log In" opens the sign-in form          │ Passed    │ 2s       │
+│ login                 │ valid credentials sign the user in                 │ Skipped   │ 0s       │
+│ login                 │ invalid credentials show error and stay on sign-in │ Passed    │ 3s       │
+│ login                 │ empty form submit does not sign the user in        │ Passed    │ 3s       │
+│ login                 │ empty form submit shows a validation message       │ Known bug │ 13s      │
+│ site health           │ / loads with a title and footer                    │ Passed    │ 1s       │
+│ site health           │ /careers/ loads with a title and footer            │ Passed    │ 1s       │
+│ site health           │ /case-studies/ loads with a title and footer       │ Passed    │ 1s       │
+│ site health           │ /terms/ loads with a title and footer              │ Passed    │ 1s       │
+│ site health           │ /privacy/ loads with a title and footer            │ Passed    │ 1s       │
+│ site health           │ /about/ loads with a title and footer              │ Passed    │ 2s       │
+│ site health           │ home page has no broken images                     │ Passed    │ 2s       │
+│ known production bugs │ BUG-1: /api/jobs returns job listings              │ Known bug │ 0s       │
+│ known production bugs │ BUG-1: careers page shows no server errors on load │ Known bug │ 2s       │
+│ known production bugs │ BUG-2: /landing/ serves an HTML page               │ Known bug │ 0s       │
+│ mobile layout         │ BUG-3: / fits a 390px phone screen                 │ Known bug │ 2s       │
+│ mobile layout         │ BUG-3: /privacy/ fits a 390px phone screen         │ Known bug │ 2s       │
+│ mobile layout         │ BUG-3: /landing/ira-landing/ fits a 390px phone    │ Known bug │ 1s       │
+│ mobile layout         │ /about/ fits a 390px phone screen (control)        │ Passed    │ 3s       │
+└───────────────────────┴────────────────────────────────────────────────────┴───────────┴──────────┘
+
+Total: 19
+Passed: 11
+Failed: 0
+Known bugs (expected fail): 7
+Skipped: 1
+```
+
+The 7 **Known bug** rows are the `test.fail` tests above (BUG-1 ×2, BUG-2,
+BUG-3 ×3, BUG-4): expected failures, so `npm run test:ui` exits 0. If Dili fixes
+a bug, that test passes unexpectedly and the reporter flips it to **Failed** —
+the signal to remove the marker. The 1 skip is the valid-login test, which needs
+`DILI_EMAIL` / `DILI_PASSWORD`.
+
+## Extend it (good next steps)
 
 1. Add a scenario to `scenarioRegistry.ts` (e.g. overtime, certified payroll)
    and watch the meta-test force you to give it a citation.

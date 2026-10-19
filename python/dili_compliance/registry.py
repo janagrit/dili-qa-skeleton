@@ -3,7 +3,7 @@
 Every rule becomes a cited, deterministic scenario an auditor can trace:
 scenario id -> rule -> paragraph-level citation -> inputs -> expected result.
 
-Unlike the TypeScript skeleton, the inputs and the expected verdict live here in
+Unlike the TypeScript version, the inputs and the expected verdict live here in
 the registry (not hard-coded in test bodies), so a compliance reviewer can read
 and add scenarios without touching test code. Citations are paragraph-level per
 the audit (e.g. ``29 CFR 5.5(a)(1)(i)``), not just ``29 CFR Part 5``.
