@@ -1,4 +1,4 @@
-# Dili — Product QA Findings
+# Dili QA Findings
 
 **Date:** 2026-10-19
 **Scope:** live checks of `www.dili.com` and the login flow at
