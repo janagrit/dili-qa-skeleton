@@ -26,6 +26,9 @@ for (const scenario of scenariosFor('apprenticeship')) {
       }
       case 'AP-004': {
         expect(() => checkApprenticeshipRatio(150, 100, REQUIRED_RATIO)).toThrow(/exceed totalHours/);
+        break;
+      }
+      case 'AP-005': {
         expect(() => checkApprenticeshipRatio(-5, 100, REQUIRED_RATIO)).toThrow(/non-negative/);
         break;
       }

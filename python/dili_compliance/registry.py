@@ -8,6 +8,9 @@ the registry (not hard-coded in test bodies), so a compliance reviewer can read
 and add scenarios without touching test code. Citations are paragraph-level
 (e.g. ``29 CFR 5.5(a)(1)(i)``), not just ``29 CFR Part 5``.
 
+IDs are shared with ``src/scenarioRegistry.ts``: one ID = one rule in both
+ports. The TypeScript port covers a subset (no fringe), so it has gaps.
+
 Re-verify citations against eCFR / uscode.house.gov when a rule changes: the 2023
 Davis-Bacon final rule renumbered parts of 29 CFR 5.5.
 """
@@ -178,6 +181,16 @@ SCENARIO_REGISTRY: List[Scenario] = [
         wage=WageInput("Electrician", "60.00", "-2.50"),
         expected_error="ValueError",
         tags=["failure-mode", "input-validation", "fringe"],
+    ),
+    Scenario(
+        id="PW-008",
+        area="prevailing-wage",
+        rule="Davis-Bacon: total compensation above the prevailing wage",
+        citation="29 CFR 5.5(a)(1)(i)",
+        description="Base and fringe both above the determination is compliant",
+        expected_compliant=True,
+        wage=WageInput("Electrician", "50.00", "15.00"),
+        tags=["boundary"],
     ),
     Scenario(
         id="AP-004",

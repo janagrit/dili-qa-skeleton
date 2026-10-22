@@ -33,18 +33,18 @@ for (const scenario of scenariosFor('prevailing-wage')) {
         expect(result.shortfallPerHour).toBe(5.0);
         break;
       }
-      case 'PW-003': {
+      case 'PW-008': {
         const result = checkPrevailingWage(record({ hourlyRate: 50.0 }), RATES);
         expect(result.compliant).toBe(true);
         break;
       }
-      case 'PW-004': {
+      case 'PW-005': {
         expect(() => checkPrevailingWage(record({ classification: 'Wizard' }), RATES)).toThrow(
           /No prevailing rate/,
         );
         break;
       }
-      case 'PW-005': {
+      case 'PW-006': {
         expect(() => checkPrevailingWage(record({ hourlyRate: 44.995 }), RATES)).toThrow(
           /fractions of a cent/,
         );
