@@ -4,6 +4,9 @@
  * Every rule from the source regulation becomes a cited, deterministic test
  * scenario. An auditor can follow any test failure back to the rule it
  * violates: scenario id -> rule -> citation.
+ *
+ * IDs are shared with python/dili_compliance/registry.py: one ID = one rule in
+ * both ports. This port covers a subset (no fringe), so numbering has gaps.
  */
 
 export interface TestScenario {
@@ -34,7 +37,7 @@ export const scenarioRegistry: TestScenario[] = [
     tags: ['violation', 'money-impact'],
   },
   {
-    id: 'PW-003',
+    id: 'PW-008',
     area: 'prevailing-wage',
     rule: 'Davis-Bacon Act',
     citation: '29 CFR 5.5(a)(1)(i)',
@@ -42,7 +45,7 @@ export const scenarioRegistry: TestScenario[] = [
     tags: ['boundary'],
   },
   {
-    id: 'PW-004',
+    id: 'PW-005',
     area: 'prevailing-wage',
     rule: 'Davis-Bacon Act: conformance of unlisted classifications',
     citation: '29 CFR 5.5(a)(1)(iii)',
@@ -82,7 +85,15 @@ export const scenarioRegistry: TestScenario[] = [
     tags: ['failure-mode', 'input-validation'],
   },
   {
-    id: 'PW-005',
+    id: 'AP-005',
+    area: 'apprenticeship',
+    rule: 'Input integrity: negative labor hours are rejected',
+    citation: '26 U.S.C. 45(b)(8)(A)',
+    description: 'Negative apprentice hours are rejected instead of producing a verdict',
+    tags: ['failure-mode', 'input-validation'],
+  },
+  {
+    id: 'PW-006',
     area: 'prevailing-wage',
     rule: 'Input integrity: sub-cent pay is rejected, not rounded',
     citation: '29 CFR 5.5(a)(1)(i)',
