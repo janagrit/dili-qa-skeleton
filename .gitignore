@@ -12,3 +12,6 @@ __pycache__/
 .pytest_cache/
 .hypothesis/
 *.egg-info/
+
+# agent-eval per-run diffs
+evals/runs/

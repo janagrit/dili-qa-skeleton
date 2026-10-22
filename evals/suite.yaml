@@ -1,0 +1,47 @@
+name: "dili-qa-skeleton"
+description: "Real open items from tasks/todo.md, pinned to the commit after the ID alignment"
+# Run from the repo root via evals/run.py (it sets EVAL_DIR and EVAL_PYTEST).
+tasks:
+  - id: ts-fringe-support
+    description: >
+      The TypeScript engine in src/complianceEngine.ts ignores fringe benefits;
+      the Python port (python/dili_compliance/engine.py) is the reference.
+      Make checkPrevailingWage score fringe the same way:
+      PayrollRecord gets an optional fringeRate (USD/hour, default 0);
+      each prevailingRates value is either a number (base only, as today) or
+      { base: number; fringe: number }. Compliant only when paid base >= required
+      base AND paid base + fringe >= required base + fringe. shortfallPerHour is
+      the larger of the base and total shortfalls. Sub-cent fringe is rejected
+      like other money. Existing callers and tests must keep working;
+      npm run typecheck and npm test must pass.
+    repo: "."
+    ref: "881aa6e"
+    test_cmd: "sh $EVAL_DIR/checks/ts-fringe.sh"
+    timeout_seconds: 600
+    tags: [typescript, feature]
+
+  - id: login-no-fixed-wait
+    description: >
+      tests/login.spec.ts uses page.waitForTimeout(1000) in the
+      "empty form submit does not sign the user in" test. Replace the fixed
+      sleep with a deterministic wait while keeping the guarantee that the
+      login API is never called on an empty submit. You cannot run the UI
+      tests (they hit the live site); npm run typecheck must pass.
+    repo: "."
+    ref: "881aa6e"
+    test_cmd: "sh $EVAL_DIR/checks/login-no-wait.sh"
+    timeout_seconds: 300
+    tags: [typescript, flaky-test]
+
+  - id: cross-port-id-check
+    description: >
+      Scenario IDs are shared between src/scenarioRegistry.ts and
+      python/dili_compliance/registry.py (one ID = one rule), but nothing
+      enforces it. Add an automated test that fails when the TypeScript
+      registry contains a scenario ID that is not in the Python registry.
+      Both npm test and the Python suite (cd python && pytest -q) must pass.
+    repo: "."
+    ref: "881aa6e"
+    test_cmd: "sh $EVAL_DIR/checks/cross-port-ids.sh"
+    timeout_seconds: 600
+    tags: [cross-language, test]
