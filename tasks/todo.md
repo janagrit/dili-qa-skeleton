@@ -312,3 +312,64 @@ scenarios have no fringe and can be shared straight away.
 - [ ] 7. Verify: `npm run typecheck`, `npm test`, `cd python && pytest -q`; test count and
       names unchanged apart from intended additions
 - [ ] 8. Review section
+
+---
+
+# Make the eval checkers work on the new test layout
+
+## Problem
+
+`evals/checks/*.sh` use the old flat paths (`tests/login.spec.ts`, `tests/prevailing-wage.spec.ts`,
+and copy the hidden fringe spec into `tests/`, which is now in neither project). The suite still
+runs them against `881aa6e` (old layout), so they must keep working there too. Run by hand in the
+repo, they also leave changes behind (PW-099 rename, copied hidden spec).
+
+## Todo
+
+- [x] 1. `login-no-wait.sh`: use `tests/ui/login.spec.ts`, fall back to `tests/login.spec.ts`
+- [x] 2. `cross-port-ids.sh`: use `tests/logic/prevailing-wage.spec.ts` (fallback to old path);
+      back up the two renamed files and restore them on exit
+- [x] 3. `ts-fringe.sh`: copy the hidden spec into `tests/logic/` with a `../../src` import
+      when that folder exists (else `tests/` as before); remove the copy on exit
+- [x] 4. `evals/README.md`: how to run a checker by hand
+- [x] 5. Verify on the current code: each checker fails (baseline) and leaves `git status` unchanged;
+      login checker passes with a `networkidle` fix in a scratch copy
+- [x] 6. Review section
+
+## Review
+
+- **Paths:** each judge tries the new path (`tests/ui/`, `tests/logic/`) and falls back to the
+  old flat `tests/`, so the eval suite pinned to `881aa6e` still works.
+- **Hidden fringe spec:** copied into `tests/logic/` with its import rewritten to `../../src`.
+  Before this, on the new layout it would have landed in `tests/`, outside both projects, and
+  never run.
+- **Cleanup:** `cross-port-ids.sh` backs up and restores the two files it renames;
+  `ts-fringe.sh` deletes the copied hidden spec. Both use `trap ... EXIT`, so cleanup also
+  happens when the judge fails.
+- **README:** `evals/README.md` shows how to run a judge by hand.
+- **Verified:** on the current code all three judges fail for the expected reason (sleep still
+  there / no `fringeRate` / PW-099 not caught) and `git status` is unchanged afterwards. In a
+  scratch copy with a `networkidle` fix, `login-no-wait.sh` passes. That also ran the new
+  `HomePage` -> `LoginPage` page objects in a real browser against the mock login page.
+- **Not verified:** a passing run of `ts-fringe.sh` or `cross-port-ids.sh` (that needs the
+  solutions, which are your exercises 7 and 8).
+
+---
+
+# Live-site findings update (2026-10-23)
+
+- [x] 1. BUG-2 (`/landing/`): confirmed still open. It is Hugo's RSS feed for the landing-page
+      section; nothing on the 6 main pages links to it, but `sitemap.xml` lists it.
+      `FINDINGS.md` #3 updated with this, severity Medium -> Low.
+- [x] 2. BUG-1 (`/api/jobs`): fixed in production (200 with the job list, careers page has no 5xx).
+      The two tests lost `.fail` and moved from `known production bugs` to `site health` as
+      regression guards (same titles). `FINDINGS.md` #2, status line and the
+      "How to reproduce" note updated.
+
+## Review
+
+- **Verified:** `npm run typecheck` clean; both BUG-1 tests pass against the live site; still
+  19 UI tests; BUG-2 still reports as Known bug.
+- **Not checked today:** BUG-3 (mobile width) and BUG-4 (empty login form).
+- **Left as is:** `FINDINGS.md` line 11 says a fixed bug's test "passes"; with `test.fail` it
+  is reported as failed ("expected to fail, but passed"), as "How to reproduce" says.

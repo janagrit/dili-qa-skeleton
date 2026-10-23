@@ -24,6 +24,14 @@ python3.12 -m venv .eval-venv && .eval-venv/bin/pip install <path-to-agent-eval-
 git worktree prune   # git < 2.17 can't remove agent-eval's worktrees itself
 ```
 
+To check your own solution to a task, run its judge from the repo root
+(exit code 0 = pass). Judges undo their own temporary changes when they exit.
+
+```sh
+export EVAL_DIR=$PWD/evals EVAL_PYTEST=$PWD/python/.venv/bin/pytest
+sh evals/checks/login-no-wait.sh; echo $?   # or ts-fringe.sh, cross-port-ids.sh
+```
+
 Each agent run is capped at $3 (`--max-budget-usd`). GateGuard is turned off
 inside agent runs only (`ECC_GATEGUARD=off`).
 

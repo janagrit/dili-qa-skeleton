@@ -26,22 +26,22 @@ test.describe('site health', () => {
     await sitePage.gotoAndSettle('/');
     expect(await sitePage.brokenImages()).toEqual([]);
   });
-});
 
-test.describe('known production bugs', () => {
-  // BUG-1: the careers page loads jobs from /api/jobs, which returns
-  // 502 {"error":"Dover API error"}, so no openings are listed.
-  test.fail('BUG-1: /api/jobs returns job listings', async ({ request }) => {
+  // BUG-1 (fixed, verified 2026-10-23): /api/jobs returned 502 {"error":"Dover API error"},
+  // so the careers page listed no openings. Kept as regression guards.
+  test('BUG-1: /api/jobs returns job listings', async ({ request }) => {
     const response = await request.get('/api/jobs');
     expect(response.status(), await response.text()).toBe(200);
   });
 
-  test.fail('BUG-1: careers page shows no server errors while loading jobs', async ({ sitePage }) => {
+  test('BUG-1: careers page shows no server errors while loading jobs', async ({ sitePage }) => {
     const serverErrors = sitePage.recordServerErrors();
     await sitePage.gotoAndSettle('/careers/');
     expect(serverErrors).toEqual([]);
   });
+});
 
+test.describe('known production bugs', () => {
   // BUG-2: /landing/ serves raw XML (application/xml) instead of an HTML page.
   test.fail('BUG-2: /landing/ serves an HTML page', async ({ request }) => {
     const response = await request.get('/landing/');
