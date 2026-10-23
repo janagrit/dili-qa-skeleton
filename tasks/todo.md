@@ -191,3 +191,124 @@ work, not impressions. `/ecc:agent-eval` gives a YAML task format plus a CLI
 - **Overall:** opus 6/9, sonnet 8/9. Total eval spend $9.81 ($8.07 + $1.74).
 - **Open question (not done):** is 250ms the right bar? The task said "keep the guarantee",
   and the old 1s sleep met it, so I held fixes to that standard.
+
+---
+
+# Run the UI tests with the browser visible
+
+## Problem
+
+`npm run test:ui` runs the live-site tests headless. `npm run test:headed` shows the
+browser but has no `--project`, so it also runs the 13 logic tests, which don't use one.
+
+## Todo
+
+- [ ] 1. `package.json`: add `"test:ui:headed": "playwright test --project=ui --headed"`
+- [ ] 2. `README.md`: add one line for it under `npm run test:ui`
+- [ ] 3. Verify: `npx playwright test --project=ui --headed --list` lists the 19 UI tests
+- [ ] 4. Review section
+
+---
+
+# Restructure the UI tests around a Page Object Model
+
+## Problem
+
+The UI specs drive pages directly: locators such as `getByRole('textbox', { name: 'Email' })`
+are repeated across tests, and login helpers are plain functions inside `login.spec.ts`.
+Logic and UI specs share one flat `tests/` folder, and the config tells them apart by file name.
+
+## Target layout
+
+```
+tests/
+  logic/      prevailing-wage, apprenticeship, registry .spec.ts   (moved, imports become ../../src)
+  ui/         login.spec.ts, site.spec.ts                          (moved, rewritten to use pages)
+  pages/      HomePage.ts, LoginPage.ts, SitePage.ts
+  fixtures.ts test.extend({ homePage, loginPage, sitePage }) + re-export expect
+```
+
+Page objects hold locators and actions. Assertions stay in the specs (Playwright's
+recommended style). Test titles, `test.fail` markers and behaviour stay exactly the same.
+
+## Todo
+
+- [x] 1. Save `npx playwright test --list` output as the "before" snapshot (13 logic + 19 UI)
+- [x] 2. `git mv` the 3 logic specs to `tests/logic/` and fix their `../src` imports
+- [x] 3. Add `tests/pages/HomePage.ts`: `goto()`, `openLogin()` (nav "Log In" link)
+- [x] 4. Add `tests/pages/LoginPage.ts`: email/password/submit/forgot/SSO/error locators,
+      `heading`, `signIn(email, password)`, `submitEmpty()`
+- [x] 5. Add `tests/pages/SitePage.ts`: `goto(path)` returns the response, `footer`,
+      `brokenImages()`, `renderedWidth()` (used by the BUG-3 checks)
+- [x] 6. Add `tests/fixtures.ts` that provides the three pages to tests
+- [x] 7. `git mv` the 2 UI specs to `tests/ui/` and rewrite them to use the fixtures.
+      `/api/jobs` and `/landing/` checks keep using `request` (they are API checks, not pages)
+- [x] 8. `playwright.config.ts`: projects use `testDir: './tests/logic'` and `'./tests/ui'`
+      instead of the file-name globs
+- [x] 9. Verify: `npm run typecheck`, `npm test` (13 pass), and `--list` matches the
+      "before" snapshot apart from the new paths
+- [x] 10. Review section
+
+## Not in scope
+
+- `waitForTimeout(1000)` in the empty-submit test stays as it is (behaviour change, separate task).
+- `evals/` checks reference the old paths, but they run against the pinned commit `881aa6e`,
+  so the move does not affect them.
+
+## Review
+
+- **Layout:** `tests/logic/` (3 compliance specs, moved, imports now `../../src`),
+  `tests/ui/` (login + site specs), `tests/pages/` (page objects), `tests/fixtures.ts`.
+- **Page objects:**
+  - `HomePage`: nav "Log In" link; `openLogin()` returns the `LoginPage` once it has loaded.
+  - `LoginPage`: form locators, error / validation messages, `signIn()`, `expectLoaded()`,
+    `isLoginRequest()` (the login POST matcher), `url`.
+  - `SitePage`: footer, `goto()`, `gotoAndSettle()`, `brokenImages()`, `renderedWidth()`,
+    `recordServerErrors()`.
+- **Fixtures:** `homePage`, `sitePage`. No `loginPage` fixture, because a `beforeEach` that opens
+  login would also hit the live site for the valid-login test, which skips before navigating today.
+- **Config:** projects pick tests by folder (`testDir`) instead of file-name globs. Project names unchanged.
+- **Not changed:** test names, `test.fail` markers, assertions, the `waitForTimeout(1000)`, and the
+  `/api/jobs` and `/landing/` request checks.
+- **Verified:** `npm run typecheck` clean; `npm test` 13/13; `playwright test --list` gives the
+  same 32 tests as before apart from the folder paths.
+- **Not verified:** the 19 UI tests were not run against the live site.
+
+---
+
+# Shared JSON scenario data for the TypeScript and Python ports (after the POM work)
+
+## Problem
+
+Each scenario is defined twice. Python keeps the inputs and the expected verdict in
+`python/dili_compliance/registry.py`; TypeScript keeps only id/rule/citation in
+`src/scenarioRegistry.ts` and types the inputs into a `switch` in each spec. The two
+copies drift: same ID, different inputs (e.g. PW-001 is 45.00 + 12.50 fringe in Python,
+45.00 base only in TS).
+
+## Blocker
+
+The TS engine does not score fringe yet. Python's wage scenarios use fringe, so the two
+ports can only share wage inputs once TS supports it (the `ts-fringe-support` eval task;
+Sonnet's or Opus's diffs from `evals/runs/` are a starting point). Apprenticeship
+scenarios have no fringe and can be shared straight away.
+
+## Todo
+
+- [ ] 1. Decide: add fringe to the TS engine first, or share AP-* only for now
+- [ ] 2. Add `scenarios/scenarios.json` (tsconfig already includes `scenarios/`):
+      id, area, rule, citation, description, tags, `input`, `expect`.
+      Money and ratios as strings (`"45.00"`, `"0.15"`) so Python keeps exact `Decimal`.
+      `expect` is `{ "compliant": bool }` or `{ "error": "KeyError" | "ValueError" }`
+- [ ] 3. Python: `registry.py` builds `SCENARIO_REGISTRY` from the JSON into the existing
+      dataclasses, so `runner.py` and the tests don't change. `RATES`, `CITATIONS` stay in code
+- [ ] 4. TS: `scenarioRegistry.ts` reads the JSON; each spec loops over it, calls the engine
+      with `input` and checks `expect`. The `switch` blocks go away.
+      `error` means "throws" in TS (TS errors are plain `Error`, not KeyError/ValueError)
+- [ ] 5. Keep extra TS-only checks that the JSON can't express (PW-002 shortfall = 5.00,
+      PW-006 44.99 -> shortfall 0.01) as separate named tests
+- [ ] 6. Registry meta-tests (TS `registry.spec.ts`, Python `test_registry.py`) run on the
+      JSON; the cross-port ID test becomes unnecessary (one file = one set of IDs)
+- [ ] 7. Verify: `npm run typecheck`, `npm test`, `cd python && pytest -q`; test count and
+      names unchanged apart from intended additions
+- [ ] 8. Review section

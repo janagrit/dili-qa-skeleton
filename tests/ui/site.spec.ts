@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures';
 
 /**
  * Live-site smoke tests for www.dili.com (BASE_URL). They belong to the `ui`
@@ -14,21 +14,17 @@ const PAGES = ['/', '/about/', '/careers/', '/case-studies/', '/privacy/', '/ter
 
 test.describe('site health', () => {
   for (const path of PAGES) {
-    test(`${path} loads with a title and footer`, async ({ page }) => {
-      const response = await page.goto(path);
+    test(`${path} loads with a title and footer`, async ({ page, sitePage }) => {
+      const response = await sitePage.goto(path);
       expect(response?.status(), `${path} HTTP status`).toBe(200);
       await expect(page).toHaveTitle(/Dili/);
-      await expect(page.getByText(/© \d{4} Dili Inc/)).toBeVisible();
+      await expect(sitePage.footer).toBeVisible();
     });
   }
 
-  test('home page has no broken images', async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-    const broken = await page.$$eval('img', (imgs) =>
-      imgs.filter((i) => i.complete && i.naturalWidth === 0).map((i) => i.src),
-    );
-    expect(broken).toEqual([]);
+  test('home page has no broken images', async ({ sitePage }) => {
+    await sitePage.gotoAndSettle('/');
+    expect(await sitePage.brokenImages()).toEqual([]);
   });
 });
 
@@ -40,13 +36,9 @@ test.describe('known production bugs', () => {
     expect(response.status(), await response.text()).toBe(200);
   });
 
-  test.fail('BUG-1: careers page shows no server errors while loading jobs', async ({ page }) => {
-    const serverErrors: string[] = [];
-    page.on('response', (r) => {
-      if (r.status() >= 500) serverErrors.push(`${r.status()} ${r.url()}`);
-    });
-    await page.goto('/careers/');
-    await page.waitForLoadState('networkidle');
+  test.fail('BUG-1: careers page shows no server errors while loading jobs', async ({ sitePage }) => {
+    const serverErrors = sitePage.recordServerErrors();
+    await sitePage.gotoAndSettle('/careers/');
     expect(serverErrors).toEqual([]);
   });
 
@@ -64,24 +56,19 @@ test.describe('known production bugs', () => {
     const PHONE_WIDTH = 390;
     test.use({ viewport: { width: PHONE_WIDTH, height: 844 }, isMobile: true });
 
-    const pageWidth = () =>
-      Math.max(window.innerWidth, document.documentElement.scrollWidth);
-
     for (const path of ['/', '/privacy/', '/landing/ira-landing/']) {
-      test.fail(`BUG-3: ${path} fits a ${PHONE_WIDTH}px phone screen`, async ({ page }) => {
-        await page.goto(path);
-        await page.waitForLoadState('networkidle');
-        const width = await page.evaluate(pageWidth);
+      test.fail(`BUG-3: ${path} fits a ${PHONE_WIDTH}px phone screen`, async ({ sitePage }) => {
+        await sitePage.gotoAndSettle(path);
+        const width = await sitePage.renderedWidth();
         expect(width, `${path} renders ${width}px wide on a ${PHONE_WIDTH}px screen`).toBe(
           PHONE_WIDTH,
         );
       });
     }
 
-    test(`/about/ fits a ${PHONE_WIDTH}px phone screen (control)`, async ({ page }) => {
-      await page.goto('/about/');
-      await page.waitForLoadState('networkidle');
-      expect(await page.evaluate(pageWidth)).toBe(PHONE_WIDTH);
+    test(`/about/ fits a ${PHONE_WIDTH}px phone screen (control)`, async ({ sitePage }) => {
+      await sitePage.gotoAndSettle('/about/');
+      expect(await sitePage.renderedWidth()).toBe(PHONE_WIDTH);
     });
   });
 

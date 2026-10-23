@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { checkApprenticeshipRatio } from '../src/complianceEngine';
-import { scenariosFor } from '../src/scenarioRegistry';
+import { checkApprenticeshipRatio } from '../../src/complianceEngine';
+import { scenariosFor } from '../../src/scenarioRegistry';
 
 // Illustrative threshold only. The real value comes from the statute.
 const REQUIRED_RATIO = 0.15;
 
-for (const scenario of scenariosFor('apprenticeship')) {
+for (const scenario of scenariosFor('apprenticeship')) { // apprenticeship (ученичество, стажировка)
   test(`[${scenario.id}] ${scenario.description} (${scenario.citation})`, async () => {
     switch (scenario.id) {
       case 'AP-001': {
