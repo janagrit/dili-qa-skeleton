@@ -4,7 +4,7 @@
 **Scope:** live checks of `www.dili.com` and the login flow at
 `pwa.dili.ai/v2/login`, run with Playwright (desktop and a 390px phone viewport)
 and direct HTTP requests.
-**Status:** all five findings below are open in production.
+**Status:** finding 2 is fixed (verified 2026-10-23); the other four are open in production.
 
 Each finding (except the security issue) has an automated test in this repo
 written as `test.fail(...)`: it asserts the correct behaviour and is expected to
@@ -18,8 +18,8 @@ fix is in. Run them with `npm run test:ui`.
 | # | Finding | Area | Severity | Test |
 |---|---------|------|----------|------|
 | 1 | Login API security issue | Auth API | Critical | — (details withheld) |
-| 2 | Careers page shows no jobs: `/api/jobs` returns 502 | Careers | High | `site.spec.ts` BUG-1 |
-| 3 | `/landing/` serves raw XML instead of a web page | Marketing site | Medium | `site.spec.ts` BUG-2 |
+| 2 | Careers page shows no jobs: `/api/jobs` returns 502 — **Fixed** | Careers | High | `site.spec.ts` BUG-1 |
+| 3 | `/landing/` serves raw XML instead of a web page | Marketing site | Low | `site.spec.ts` BUG-2 |
 | 4 | Pages are wider than a phone screen | Mobile layout | Medium | `site.spec.ts` BUG-3 |
 | 5 | Empty login form gives no validation message | Login UI | Medium | `login.spec.ts` BUG-4 |
 
@@ -35,7 +35,11 @@ public repository.
 - No token or session was used or probed further.
 - A regression test will be added once the intended behaviour is confirmed.
 
-## 2. Careers page shows no jobs — High
+## 2. Careers page shows no jobs — High — Fixed
+
+**Fixed (verified 2026-10-23):** `/api/jobs` now returns 200 with the job list,
+and the careers page loads with no server errors. The BUG-1 tests are now normal
+tests in `site health` that guard against the bug coming back.
 
 The careers page loads its listings from `/api/jobs`, which returns
 **HTTP 502** with `{"error":"Dover API error"}`. The page shows no open roles,
@@ -45,13 +49,27 @@ so candidates can't see or apply for jobs from the site. Re-checked 2026-10-19.
 shows open roles. If the upstream job board is down, the page should show a
 fallback message or a link instead of an empty list.
 
-## 3. `/landing/` serves raw XML — Medium
+## 3. `/landing/` serves raw XML — Low
 
 `https://www.dili.com/landing/` responds with `Content-Type: application/xml`,
 so browsers show raw XML instead of a page.
 
-**Expected:** an HTML page (`text/html`), or a redirect to the correct landing
-page.
+The XML is an RSS feed ("Landings on Dili", `<generator>Hugo</generator>`).
+`/landing/` is the Hugo section that holds the marketing landing pages
+(`advisory-landing/`, `ira-landing/`, `pwa-landing/`, `legacy-landing/`). The
+section has no HTML list template, so Hugo serves its RSS feed at that URL.
+
+**How users reach it:** no link on `/`, `/about/`, `/careers/`,
+`/case-studies/`, `/privacy/` or `/terms/` points to it (checked 2026-10-23;
+other pages not checked). But `sitemap.xml` lists it, so search engines can
+index it and show it in results. Users can also land on it by trimming the URL
+of a landing page.
+
+**Expected:** an HTML page (`text/html`) or a redirect, for example to the home page.
+Removing `/landing/` from `sitemap.xml` limits the impact on its own.
+
+**Severity:** Low (was Medium). Nothing on the site links to it, so only the
+sitemap and URL trimming expose it.
 
 ## 4. Pages wider than a phone screen — Medium
 
@@ -83,6 +101,6 @@ npx playwright install chromium
 npm run test:ui
 ```
 
-The run ends with a summary table. Findings 2–5 show as **Known bug**
+The run ends with a summary table. Findings 3–5 show as **Known bug**
 (expected failures); when one is fixed, its row turns to **Failed**
 ("expected to fail, but passed"), which signals the fix is live.
