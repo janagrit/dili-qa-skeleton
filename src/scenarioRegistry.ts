@@ -93,6 +93,14 @@ export const scenarioRegistry: TestScenario[] = [
     tags: ['failure-mode', 'input-validation'],
   },
   {
+    id: 'AP-006',
+    area: 'apprenticeship',
+    rule: 'Input integrity: total labor hours must be positive',
+    citation: '26 U.S.C. 45(b)(8)(A)',
+    description: 'Zero total hours are rejected instead of causing division by zero',
+    tags: ['failure-mode', 'input-validation'],
+  },
+  {
     id: 'PW-006',
     area: 'prevailing-wage',
     rule: 'Input integrity: sub-cent pay is rejected, not rounded',

@@ -32,6 +32,10 @@ for (const scenario of scenariosFor('apprenticeship')) { // apprenticeship (уч
         expect(() => checkApprenticeshipRatio(-5, 100, REQUIRED_RATIO)).toThrow(/non-negative/);
         break;
       }
+      case 'AP-006': {
+        expect(() => checkApprenticeshipRatio(0, 0, REQUIRED_RATIO)).toThrow(/totalHours must be positive/);
+        break;
+      }
       default:
         throw new Error(`No test body for scenario ${scenario.id} yet: add it here`);
     }
