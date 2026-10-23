@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { scenarioRegistry } from '../src/scenarioRegistry';
+import { scenarioRegistry } from '../../src/scenarioRegistry';
 
 /**
  * Traceability meta-tests: the registry itself is under test.

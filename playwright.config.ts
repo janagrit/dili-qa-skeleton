@@ -21,8 +21,8 @@ export default defineConfig({
   },
   projects: [
     // Pure engine + registry tests: no browser, no network. This is what CI runs.
-    { name: 'logic', testIgnore: ['**/login.spec.ts', '**/site.spec.ts'] },
-    // UI tests drive the live site: run on demand, never in CI by default.
-    { name: 'ui', testMatch: ['**/login.spec.ts', '**/site.spec.ts'] },
+    { name: 'logic', testDir: './tests/logic' },
+    // UI tests drive the live site through page objects (tests/pages): run on demand, never in CI by default.
+    { name: 'ui', testDir: './tests/ui' },
   ],
 });

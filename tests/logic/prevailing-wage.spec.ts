@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { checkPrevailingWage, PayrollRecord } from '../src/complianceEngine';
-import { scenariosFor } from '../src/scenarioRegistry';
+import { checkPrevailingWage, PayrollRecord } from '../../src/complianceEngine';
+import { scenariosFor } from '../../src/scenarioRegistry';
 
 // Illustrative rates only. In the real system these come from wage determinations.
 const RATES: Record<string, number> = {
